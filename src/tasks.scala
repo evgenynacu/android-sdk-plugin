@@ -869,11 +869,12 @@ object Tasks {
                          , proguardCache
                          , binPath
                          , dependencyClasspath
-                         , classesJar
+                         , packageT in Compile
+                         , packageT in Test
                          , classesDex
                          , state
                          , streams) map {
-    (p, i, pc, b, d, j, cd, st, s) =>
+    (p, i, pc, b, d, j, tj, cd, st, s) =>
 
     val proguardedDexMarker = b / ".proguarded-dex"
     (p map { f =>
@@ -889,7 +890,7 @@ object Tasks {
         // no proguard? then we don't need to dex scala!
         case x if !x.data.getName.startsWith("scala-library") &&
           x.data.getName.endsWith(".jar") => x.data.getCanonicalFile
-      }) ++ i.proguardCache :+ j
+      }) ++ i.proguardCache :+ j :+ tj
     }).groupBy (_.getName).collect {
       case ("classes.jar",xs) => xs.distinct
       case (_,xs) => xs.head :: Nil
@@ -919,26 +920,26 @@ object Tasks {
     outDex
   }
 
-  val proguardInputsTaskDef = ( useProguard
+  val proguardInputsTaskDef = ( packageT in Test
                               , proguardScala
                               , proguardCache
                               , proguardLibraries
                               , dependencyClasspath
                               , platformJars
-                              , classesJar
+                              , packageT in Compile
                               , binPath
                               , cacheDirectory
                               , state
                               , streams
                               ) map {
-    case (u, s, pc, l, d, (p, x), c, b, cacheDir, stat, st) =>
+    case (tc, s, pc, l, d, (p, x), c, b, cacheDir, stat, st) =>
 
-    if (u) {
+    if (true) {
       val injars = d.filter { a =>
         val in = a.data
         (s || !in.getName.startsWith("scala-library")) &&
           !l.exists { i => i.getName == in.getName}
-      }.distinct :+ Attributed.blank(c)
+      }.distinct :+ Attributed.blank(c) :+ Attributed.blank(tc)
       val extras = x map (f => file(f))
 
       if (s && createDebug) {

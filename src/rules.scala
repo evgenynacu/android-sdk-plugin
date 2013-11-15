@@ -278,7 +278,6 @@ object Plugin extends sbt.Plugin {
     proguardConfig          <<= proguardConfig dependsOn(packageResources),
     proguard                <<= proguardTaskDef,
     proguardInputs          <<= proguardInputsTaskDef,
-    proguardInputs          <<= proguardInputs dependsOn (packageT in Compile),
     proguardScala           <<= (scalaSource in Compile) {
       s => (s ** "*.scala").get.size > 0
     },
